@@ -12,6 +12,9 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/databricks/cli/libs/diag"
+	"go.yaml.in/yaml/v3"
+
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/generate"
 	"github.com/databricks/cli/bundle/phases"
@@ -34,7 +37,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/spf13/cobra"
-	"go.yaml.in/yaml/v3"
 )
 
 func newImportCommand() *cobra.Command {
@@ -459,16 +461,16 @@ func generateAppBundle(ctx context.Context, w *databricks.WorkspaceClient, app *
 	bundleName := textutil.NormalizeString(app.Name)
 	bundleConfig := map[string]dyn.Value{
 		"bundle": dyn.NewValue(map[string]dyn.Value{
-			"name": dyn.NewValue(bundleName, []dyn.Location{{Line: 1}}),
-		}, []dyn.Location{{Line: 1}}),
+			"name": dyn.NewValue(bundleName, []diag.Location{{Line: 1}}),
+		}, []diag.Location{{Line: 1}}),
 		"workspace": dyn.NewValue(map[string]dyn.Value{
-			"host": dyn.NewValue(w.Config.Host, []dyn.Location{{Line: 2}}),
-		}, []dyn.Location{{Line: 10}}),
+			"host": dyn.NewValue(w.Config.Host, []diag.Location{{Line: 2}}),
+		}, []diag.Location{{Line: 10}}),
 		"resources": dyn.NewValue(map[string]dyn.Value{
 			"apps": dyn.V(map[string]dyn.Value{
 				appKey: v,
 			}),
-		}, []dyn.Location{{Line: 20}}),
+		}, []diag.Location{{Line: 20}}),
 	}
 
 	// Download the app source files

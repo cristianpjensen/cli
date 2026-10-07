@@ -13,20 +13,25 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/databricks/cli/bundle/config/mutator/resourcemutator"
+
+	"github.com/databricks/cli/libs/log"
+	"github.com/databricks/cli/libs/logdiag"
+
+	"github.com/databricks/cli/libs/cmdio"
+	"github.com/databricks/databricks-sdk-go/logger"
+
+	"github.com/databricks/cli/libs/python"
+
+	"github.com/databricks/cli/bundle/env"
+
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/config"
-	"github.com/databricks/cli/bundle/config/mutator/resourcemutator"
-	"github.com/databricks/cli/bundle/env"
-	"github.com/databricks/cli/libs/cmdio"
 	"github.com/databricks/cli/libs/diag"
 	"github.com/databricks/cli/libs/dyn"
 	"github.com/databricks/cli/libs/dyn/convert"
 	"github.com/databricks/cli/libs/dyn/yamlloader"
-	"github.com/databricks/cli/libs/log"
-	"github.com/databricks/cli/libs/logdiag"
 	"github.com/databricks/cli/libs/process"
-	"github.com/databricks/cli/libs/python"
-	"github.com/databricks/databricks-sdk-go/logger"
 )
 
 type phase string
@@ -506,7 +511,7 @@ func loadOutput(rootPath string, outputFile io.Reader, locations *pythonLocation
 		return dyn.InvalidValue, diag.FromErr(fmt.Errorf("failed to parse output file: %w", err))
 	}
 
-	// generated has dyn.Location as if it comes from generated YAML file
+	// generated has diag.Location as if it comes from generated YAML file
 	// earlier we loaded locations.json with source locations in Python code
 	generatedWithLocations, err := mergePythonLocations(generated, locations)
 	if err != nil {

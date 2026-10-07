@@ -5,16 +5,18 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/databricks/cli/bundle"
-	"github.com/databricks/cli/bundle/config"
 	"github.com/databricks/cli/bundle/config/mutator"
 	"github.com/databricks/cli/bundle/config/mutator/resourcemutator"
+	"github.com/databricks/cli/libs/diag"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/databricks/cli/bundle"
+	"github.com/databricks/cli/bundle/config"
 	"github.com/databricks/cli/bundle/config/resources"
 	"github.com/databricks/cli/bundle/internal/bundletest"
-	"github.com/databricks/cli/libs/dyn"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -108,8 +110,8 @@ func TestExpandGlobPathsInPipelines(t *testing.T) {
 		},
 	}
 
-	bundletest.SetLocation(b, ".", []dyn.Location{{File: filepath.Join(dir, "resource.yml")}})
-	bundletest.SetLocation(b, "resources.pipelines.pipeline.libraries[3]", []dyn.Location{{File: filepath.Join(dir, "relative", "resource.yml")}})
+	bundletest.SetLocation(b, ".", []diag.Location{{File: filepath.Join(dir, "resource.yml")}})
+	bundletest.SetLocation(b, "resources.pipelines.pipeline.libraries[3]", []diag.Location{{File: filepath.Join(dir, "relative", "resource.yml")}})
 
 	diags := bundle.ApplySeq(t.Context(), b, mutator.NormalizePaths(), resourcemutator.ExpandPipelineGlobPaths())
 	require.NoError(t, diags.Error())

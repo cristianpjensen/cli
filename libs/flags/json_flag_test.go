@@ -194,7 +194,7 @@ func TestJsonUnmarshalRequestMismatch(t *testing.T) {
 	assert.Contains(t, diags, diag.Diagnostic{
 		Severity: diag.Warning,
 		Summary:  "unknown field: settings",
-		Locations: []dyn.Location{
+		Locations: []diag.Location{
 			{
 				File:   "(inline)",
 				Line:   3,
@@ -252,7 +252,7 @@ func TestJsonUnmarshalWrongTypeReportsCorrectLocation(t *testing.T) {
 	assert.Contains(t, diags, diag.Diagnostic{
 		Severity: diag.Warning,
 		Summary:  "expected int, found sequence",
-		Locations: []dyn.Location{
+		Locations: []diag.Location{
 			{
 				File:   "(inline)",
 				Line:   2,
@@ -277,7 +277,7 @@ func TestJsonUnmarshalArrayInsteadOfIntReportsCorrectLocation(t *testing.T) {
 	assert.Contains(t, diags, diag.Diagnostic{
 		Severity: diag.Warning,
 		Summary:  "cannot parse \"wrong_type\" as an integer",
-		Locations: []dyn.Location{
+		Locations: []diag.Location{
 			{
 				File:   "(inline)",
 				Line:   14,

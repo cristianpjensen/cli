@@ -11,11 +11,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/databricks/cli/bundle/config/mutator/paths"
+	"github.com/databricks/cli/bundle/libraries"
+
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/config"
-	"github.com/databricks/cli/bundle/config/mutator/paths"
 	"github.com/databricks/cli/bundle/config/resources"
-	"github.com/databricks/cli/bundle/libraries"
 	"github.com/databricks/cli/libs/diag"
 	"github.com/databricks/cli/libs/dyn"
 	"github.com/databricks/cli/libs/notebook"
@@ -329,7 +330,7 @@ func applyTranslations(ctx context.Context, b *bundle.Bundle, t *translateContex
 			return diag.Diagnostics{{
 				Severity:  diag.Error,
 				Summary:   "workspace.file_path cannot be configured when experimental.immutable_folder is enabled",
-				Locations: []dyn.Location{loc},
+				Locations: []diag.Location{loc},
 			}}
 		}
 		t.remoteRoot = resources.SnapshotFullPathRef + "/files"
