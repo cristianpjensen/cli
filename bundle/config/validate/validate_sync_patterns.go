@@ -26,16 +26,16 @@ func (v *validateSyncPatterns) Name() string {
 func (v *validateSyncPatterns) Apply(ctx context.Context, b *bundle.Bundle) diag.Diagnostics {
 	s := b.Config.Sync
 
-	checkPatterns(ctx, s.Exclude, "exclude", b)
+	checkPatterns(ctx, s.Exclude, "sync.exclude", b)
 	if logdiag.HasError(ctx) {
 		return nil
 	}
 
-	checkPatterns(ctx, s.Include, "include", b)
+	checkPatterns(ctx, s.Include, "sync.include", b)
 	return nil
 }
 
-func checkPatterns(ctx context.Context, patterns []string, field string, b *bundle.Bundle) {
+func checkPatterns(ctx context.Context, patterns []string, path string, b *bundle.Bundle) {
 	var errs errgroup.Group
 
 	for index, pattern := range patterns {
@@ -57,12 +57,12 @@ func checkPatterns(ctx context.Context, patterns []string, field string, b *bund
 			}
 
 			if len(all) == 0 {
-				path := fmt.Sprintf("sync.%s[%d]", field, index)
+				path := fmt.Sprintf("%s[%d]", path, index)
 				logdiag.LogDiag(ctx, diag.Diagnostic{
 					Severity:  diag.Warning,
 					Summary:   fmt.Sprintf("Pattern %s does not match any files", pattern),
 					Locations: b.Config.GetLocations(path),
-					Paths:     []*structpath.PathNode{structpath.NewIndex(structpath.NewStringKeys(nil, "sync", field), index)},
+					Paths:     structpath.MustParsePaths(path),
 				})
 			}
 			return nil

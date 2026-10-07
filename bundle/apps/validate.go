@@ -8,8 +8,8 @@ import (
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/bundle/config/resources"
 	"github.com/databricks/cli/libs/diag"
-	"github.com/databricks/cli/libs/dyn"
 	"github.com/databricks/cli/libs/structs/structpath"
+	"github.com/databricks/cli/libs/structs/structvar"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 )
 
@@ -94,32 +94,26 @@ type appResourceReference struct {
 
 // hasPermissions checks if a bundle resource at the given dyn path has a non-empty permissions list.
 func hasPermissions(b *bundle.Bundle, resourcePath string) bool {
-	pv, err := dyn.Get(b.Config.Value(), resourcePath+".permissions")
+	pv, err := valueAt(b, resourcePath+".permissions")
 	if err != nil {
 		return false
 	}
-	s, ok := pv.AsSequence()
-	return ok && len(s) > 0
+	for range pv.Sequence() {
+		return true
+	}
+	return false
 }
 
 // hasAppSPInPermissions checks if any permission entry for the given resource
 // references the app's service principal via variable interpolation.
 func hasAppSPInPermissions(b *bundle.Bundle, resourcePath, appKey string) bool {
 	appSPRef := fmt.Sprintf("${resources.apps.%s.service_principal_client_id}", appKey)
-	pv, err := dyn.Get(b.Config.Value(), resourcePath+".permissions")
+	pv, err := valueAt(b, resourcePath+".permissions")
 	if err != nil {
 		return false
 	}
-	s, ok := pv.AsSequence()
-	if !ok {
-		return false
-	}
-	for _, entry := range s {
-		spn, err := dyn.Get(entry, "service_principal_name")
-		if err != nil {
-			continue
-		}
-		if str, ok := spn.AsString(); ok && str == appSPRef {
+	for _, entry := range pv.Sequence() {
+		if str, ok := entry.Get("service_principal_name").AsString(); ok && str == appSPRef {
 			return true
 		}
 	}
@@ -173,7 +167,7 @@ func warnForAppResourcePermissions(b *bundle.Bundle, appKey string, app *resourc
 				ref.permission,
 				appKey,
 			),
-			Paths:     structpath.NewStringKeysSlice("resources", "apps", appKey),
+			Paths:     []*structpath.PathNode{structpath.NewStringKeys(nil, "resources", "apps", appKey)},
 			Locations: b.Config.GetLocations(appPath),
 		})
 	}
@@ -187,4 +181,13 @@ func (v *validate) Name() string {
 
 func Validate() bundle.Mutator {
 	return &validate{}
+}
+
+// valueAt returns the view of the configuration value at path.
+func valueAt(b *bundle.Bundle, path string) (structvar.View, error) {
+	p, err := structpath.ParsePath(path)
+	if err != nil {
+		return structvar.View{}, err
+	}
+	return b.Config.View().Lookup(p), nil
 }

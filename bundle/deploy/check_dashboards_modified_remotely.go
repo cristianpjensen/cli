@@ -8,7 +8,7 @@ import (
 	"github.com/databricks/cli/bundle"
 	"github.com/databricks/cli/libs/agent"
 	"github.com/databricks/cli/libs/diag"
-	"github.com/databricks/cli/libs/dyn"
+	"github.com/databricks/cli/libs/structs/structpath"
 )
 
 type dashboardState struct {
@@ -72,7 +72,7 @@ func (l *checkDashboardsModifiedRemotely) Apply(ctx context.Context, b *bundle.B
 			continue
 		}
 
-		path := dyn.MustPathFromString("resources.dashboards." + dashboard.Name)
+		path := structpath.NewStringKeys(nil, "resources", "dashboards", dashboard.Name)
 		loc := b.Config.GetLocation(path.String())
 		actual, err := b.WorkspaceClient(ctx).Lakeview.GetByDashboardId(ctx, dashboard.ID)
 		if err != nil {
@@ -80,7 +80,7 @@ func (l *checkDashboardsModifiedRemotely) Apply(ctx context.Context, b *bundle.B
 				Severity:  diag.Error,
 				Summary:   fmt.Sprintf("failed to get dashboard %q", dashboard.Name),
 				Detail:    err.Error(),
-				Paths:     dyn.ToStructPaths(path),
+				Paths:     []*structpath.PathNode{path},
 				Locations: []diag.Location{loc},
 			})
 			continue
@@ -109,7 +109,7 @@ func (l *checkDashboardsModifiedRemotely) Apply(ctx context.Context, b *bundle.B
 				"\n" +
 				"To overwrite the remote changes with your local version, use --force.\n" +
 				"The remote modifications will be lost." + agent.AgentNotice(),
-			Paths:     dyn.ToStructPaths(path),
+			Paths:     []*structpath.PathNode{path},
 			Locations: []diag.Location{loc},
 		})
 	}

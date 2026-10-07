@@ -11,9 +11,8 @@ import (
 	"github.com/databricks/cli/bundle/config"
 	"github.com/databricks/cli/bundle/libraries"
 	"github.com/databricks/cli/libs/diag"
-	"github.com/databricks/cli/libs/dyn"
-	"github.com/databricks/cli/libs/dyn/dynvar"
 	"github.com/databricks/cli/libs/structs/structpath"
+	"github.com/databricks/cli/libs/structs/structvar"
 	"github.com/databricks/databricks-sdk-go/apierr"
 )
 
@@ -52,7 +51,7 @@ func extractVolumeFromPath(artifactPath string) (string, string, string, error) 
 	return catalogName, schemaName, volumeName, nil
 }
 
-func findVolumeInBundle(r config.Root, catalogName, schemaName, volumeName string) (dyn.Path, []diag.Location, bool) {
+func findVolumeInBundle(r config.Root, catalogName, schemaName, volumeName string) (*structpath.PathNode, []diag.Location, bool) {
 	volumes := r.Resources.Volumes
 	for k, v := range volumes {
 		if v.CatalogName != catalogName || v.Name != volumeName {
@@ -64,13 +63,13 @@ func findVolumeInBundle(r config.Root, catalogName, schemaName, volumeName strin
 		// schema name is interpolated.
 		// We only have to check for ${resources.schemas...} references because any
 		// other valid reference (like ${var.foo}) would have been interpolated by this point.
-		p, ok := dynvar.PureReferenceToPath(v.SchemaName)
-		isSchemaDefinedInBundle := ok && p.HasPrefix(dyn.Path{dyn.Key("resources"), dyn.Key("schemas")})
+		p, ok := structvar.PureReferenceToPath(v.SchemaName)
+		isSchemaDefinedInBundle := ok && p.HasPrefix(structpath.MustParsePath("resources.schemas"))
 		if v.SchemaName != schemaName && !isSchemaDefinedInBundle {
 			continue
 		}
 		pathString := "resources.volumes." + k
-		return dyn.MustPathFromString(pathString), r.GetLocations(pathString), true
+		return structpath.MustParsePath(pathString), r.GetLocations(pathString), true
 	}
 	return nil, nil, false
 }
@@ -119,7 +118,7 @@ this bundle but which has not been deployed yet. Please first deploy
 the volume using 'bundle deploy' and then switch over to using it in
 the artifact_path.`,
 			Locations: slices.Concat(b.Config.GetLocations("workspace.artifact_path"), locations),
-			Paths:     append(structpath.MustParsePaths("workspace.artifact_path"), dyn.ToStructPath(path)),
+			Paths:     []*structpath.PathNode{structpath.MustParsePath("workspace.artifact_path"), path},
 		}}
 
 	}
